@@ -139,7 +139,7 @@ export const FAQListPage: React.FC = () => {
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id || null)}
+                  onClick={() => setSelectedCategory(cat.id as number)}
                   className={`px-4 py-2 font-medium ${
                     selectedCategory === cat.id
                       ? 'text-primary border-b-2 border-primary'
@@ -163,7 +163,7 @@ export const FAQListPage: React.FC = () => {
                     {/* FAQタイトル（クリックで展開） */}
                     <button
                       onClick={() =>
-                        setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)
+                        setExpandedFAQ(expandedFAQ === faq.id ? null : (faq.id as number))
                       }
                       className="w-full px-6 py-4 text-left hover:bg-gray-50 transition flex items-center justify-between"
                     >
