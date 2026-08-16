@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AnnouncementDto, CategoryDto } from '../types';
+import { AnnouncementDto, CategoryDto, FAQDto } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -130,6 +130,48 @@ class ApiClient {
   /** カテゴリを削除 */
   async deleteCategory(id: number) {
     await this.client.delete(`/categories/${id}`);
+  }
+
+  // ========== FAQ ==========
+  /** すべての表示可能な FAQ を取得（ユーザー向け） */
+  async getAllFAQs() {
+    const response = await this.client.get<FAQDto[]>('/faqs');
+    return response.data;
+  }
+
+  /** すべての FAQ を取得（管理者向け） */
+  async getAllFAQsAdmin() {
+    const response = await this.client.get<FAQDto[]>('/faqs');
+    return response.data;
+  }
+
+  /** カテゴリ別にFAQを取得（ユーザー向け） */
+  async getFAQsByCategory(categoryId: number) {
+    const response = await this.client.get<FAQDto[]>(`/faqs/category/${categoryId}`);
+    return response.data;
+  }
+
+  /** FAQ詳細を取得 */
+  async getFAQDetail(id: number) {
+    const response = await this.client.get<FAQDto>(`/faqs/${id}`);
+    return response.data;
+  }
+
+  /** FAQを新規作成（管理者用） */
+  async createFAQ(dto: FAQDto) {
+    const response = await this.client.post<FAQDto>('/faqs', dto);
+    return response.data;
+  }
+
+  /** FAQを更新（管理者用） */
+  async updateFAQ(id: number, dto: FAQDto) {
+    const response = await this.client.put<FAQDto>(`/faqs/${id}`, dto);
+    return response.data;
+  }
+
+  /** FAQを削除（管理者用） */
+  async deleteFAQ(id: number) {
+    await this.client.delete(`/faqs/${id}`);
   }
 
   // ========== ファイルアップロード ==========
