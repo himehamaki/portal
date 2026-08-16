@@ -1,18 +1,1 @@
-# Multi-stage build
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-# Production image
-FROM node:18-alpine
-
-WORKDIR /app
-RUN npm install -g serve
-COPY --from=builder /app/dist ./dist
-
-EXPOSE 5173
-CMD ["serve", "-s", "dist", "-l", "5173"]
+# Multi-stage build\nFROM node:18-alpine AS builder\n\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nRUN npm run build\n\n# Production image\nFROM node:18-alpine\n\nWORKDIR /app\nRUN npm install -g serve\nCOPY --from=builder /app/dist ./dist\n\nEXPOSE 5173\nCMD [\"serve\", \"-s\", \"dist\", \"-l\", \"5173\"]\n
