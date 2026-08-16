@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Sidebar } from '../components/Sidebar';
 import { FAQDto, CategoryDto } from '../types';
@@ -11,7 +10,6 @@ import api from '../services/api';
  * カテゴリ別でフィルタリング可能
  */
 export const FAQListPage: React.FC = () => {
-  const navigate = useNavigate();
   const [faqs, setFaqs] = useState<FAQDto[]>([]);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
