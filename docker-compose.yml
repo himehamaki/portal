@@ -1,55 +1,71 @@
 version: '3.8'
 
 services:
+  # PostgreSQL データベース
   postgres:
     image: postgres:15-alpine
-    container_name: portal-postgres
+    container_name: portal-db
     environment:
-      POSTGRES_DB: portal
-      POSTGRES_USER: portal_user
-      POSTGRES_PASSWORD: portal_password
+      POSTGRES_DB: ${DB_NAME:-portal_db}
+      POSTGRES_USER: ${DB_USER:-portal_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-portal_password}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - portal-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U portal_user"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-portal_user}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # Spring Boot バックエンド
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.backend
     container_name: portal-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/portal
-      SPRING_DATASOURCE_USERNAME: portal_user
-      SPRING_DATASOURCE_PASSWORD: portal_password
-      JWT_SECRET: your-super-secret-jwt-key-that-should-be-at-least-256-bits-long-for-hs512
-      JWT_EXPIRATION: 86400000
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-portal_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-portal_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-portal_password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SERVER_PORT: 8080
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./target:/app/target
+    networks:
+      - portal-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/users/me"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # React フロントエンド
   frontend:
-    image: node:18-alpine
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: portal-frontend
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "5173:5173"
-    command: npm run dev
     environment:
-      - VITE_API_URL=http://localhost:8080
+      VITE_API_URL: http://${BACKEND_HOST:-localhost}:${BACKEND_PORT:-8080}/api
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      - backend
+    networks:
+      - portal-network
 
 volumes:
   postgres_data:
+    driver: local
+
+networks:
+  portal-network:
+    driver: bridge
